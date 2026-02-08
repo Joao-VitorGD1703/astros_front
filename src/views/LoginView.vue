@@ -1,10 +1,41 @@
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Sparkles, ArrowRight } from 'lucide-vue-next'
+import { Sparkles, ArrowRight, User, Mail, Lock, UserPlus, LogIn } from 'lucide-vue-next'
 
 const router = useRouter()
+const isRegister = ref(false)
 
-const handleLogin = () => {
+const form = ref({
+  name: '',
+  email: '',
+  password: '',
+  confirmPassword: ''
+})
+
+const toggleMode = () => {
+  isRegister.value = !isRegister.value
+  // Reset form
+  form.value = {
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  }
+}
+
+const handleAuth = () => {
+  // Mock authentication for now
+  if (isRegister.value) {
+    if (form.value.password !== form.value.confirmPassword) {
+      alert("Passwords do not match!")
+      return
+    }
+    console.log("Registering:", form.value)
+  } else {
+    console.log("Logging in:", form.value)
+  }
+  
   router.push('/chat')
 }
 </script>
@@ -22,12 +53,81 @@ const handleLogin = () => {
       </div>
       
       <h1>AstraBot</h1>
-      <p class="subtitle">Unlock the secrets of the cosmos</p>
+      <p class="subtitle">
+        {{ isRegister ? 'Join the cosmos' : 'Unlock the secrets of the cosmos' }}
+      </p>
       
-      <button @click="handleLogin" class="enter-btn">
-        <span>Enter Cosmic Chat</span>
-        <ArrowRight :size="20" />
-      </button>
+      <form @submit.prevent="handleAuth" class="auth-form">
+        <!-- Name Field (Register Only) -->
+        <div v-if="isRegister" class="input-group">
+          <div class="icon-wrapper">
+            <User :size="20" />
+          </div>
+          <input 
+            v-model="form.name"
+            type="text" 
+            placeholder="Your Name" 
+            required 
+            class="glass-input"
+          />
+        </div>
+
+        <!-- Email Field -->
+        <div class="input-group">
+          <div class="icon-wrapper">
+            <Mail :size="20" />
+          </div>
+          <input 
+            v-model="form.email"
+            type="email" 
+            placeholder="Email Address" 
+            required 
+            class="glass-input"
+          />
+        </div>
+
+        <!-- Password Field -->
+        <div class="input-group">
+          <div class="icon-wrapper">
+            <Lock :size="20" />
+          </div>
+          <input 
+            v-model="form.password"
+            type="password" 
+            placeholder="Password" 
+            required 
+            class="glass-input"
+          />
+        </div>
+
+        <!-- Confirm Password (Register Only) -->
+        <div v-if="isRegister" class="input-group">
+          <div class="icon-wrapper">
+            <Lock :size="20" />
+          </div>
+          <input 
+            v-model="form.confirmPassword"
+            type="password" 
+            placeholder="Confirm Password" 
+            required 
+            class="glass-input"
+          />
+        </div>
+
+        <button type="submit" class="enter-btn">
+          <span>{{ isRegister ? 'Create Account' : 'Enter Cosmic Chat' }}</span>
+          <ArrowRight :size="20" />
+        </button>
+      </form>
+
+      <div class="toggle-container">
+        <p>
+          {{ isRegister ? 'Already have an account?' : "Don't have an account?" }}
+          <button type="button" @click="toggleMode" class="toggle-btn">
+            {{ isRegister ? 'Login' : 'Sign Up' }}
+          </button>
+        </p>
+      </div>
     </div>
   </div>
 </template>
@@ -94,6 +194,7 @@ const handleLogin = () => {
   max-width: 450px;
   width: 90%;
   animation: fadeUp 0.8s ease-out;
+  transition: all 0.3s ease;
 }
 
 @keyframes fadeUp {
@@ -122,7 +223,49 @@ h1 {
 .subtitle {
   color: var(--text-muted);
   font-size: 1.1rem;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Form Styles */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.icon-wrapper {
+  position: absolute;
+  left: 15px;
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.glass-input {
+  width: 100%;
+  padding: 14px 14px 14px 45px;
+  border-radius: 12px;
+  border: 1px solid rgba(138, 109, 200, 0.2);
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 1rem;
+  font-family: inherit;
+  color: var(--text-main);
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.glass-input:focus {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(138, 109, 200, 0.1);
 }
 
 .enter-btn {
@@ -138,12 +281,33 @@ h1 {
   gap: 0.8rem;
   width: 100%;
   box-shadow: 0 4px 15px rgba(138, 109, 200, 0.4);
+  margin-top: 0.5rem;
 }
 
 .enter-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(138, 109, 200, 0.6);
-  box-shadow: 0 6px 20px rgba(138, 109, 200, 0.6);
+}
+
+.toggle-container {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-top: 1rem;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0 4px;
+}
+
+.toggle-btn:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {

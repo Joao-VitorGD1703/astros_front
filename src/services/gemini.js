@@ -8,7 +8,7 @@ if (API_KEY) {
     const genAI = new GoogleGenerativeAI(API_KEY);
     model = genAI.getGenerativeModel({
         model: "gemini-2.5-flash",
-        systemInstruction: `Você é o AstraBot.
+        systemInstruction: `Você é o AstroBot.
         
         FASE 1 - COLETA: Se não tiver data/hora/cidade, peça APENAS:
         ✨ *Para revelar seu mapa, preciso de:*

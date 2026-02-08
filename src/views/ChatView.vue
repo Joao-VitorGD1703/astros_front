@@ -109,7 +109,7 @@ const clearHistory = () => {
           <Sparkles class="avatar-icon" />
         </div>
         <div class="bot-info">
-          <h2>AstraBot</h2>
+          <h2>AstroBot</h2>
           <span class="status">Online & Ready to Explore Your Stars</span>
         </div>
       </div>
