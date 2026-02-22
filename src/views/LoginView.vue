@@ -6,37 +6,90 @@ import { Sparkles, ArrowRight, User, Mail, Lock, UserPlus, LogIn } from 'lucide-
 const router = useRouter()
 const isRegister = ref(false)
 
+const API_BASE_URL = 'https://astrologic-latest.onrender.com';
+
 const form = ref({
   name: '',
   email: '',
   password: '',
-  confirmPassword: ''
+  confirmPassword: '',
+  age: ''
 })
+
+const errorMessage = ref('');
+const loading = ref(false);
 
 const toggleMode = () => {
   isRegister.value = !isRegister.value
+  errorMessage.value = '';
   // Reset form
   form.value = {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    age: ''
   }
 }
 
-const handleAuth = () => {
-  // Mock authentication for now
-  if (isRegister.value) {
-    if (form.value.password !== form.value.confirmPassword) {
-      alert("Passwords do not match!")
-      return
+const handleAuth = async () => {
+  errorMessage.value = '';
+  loading.value = true;
+
+  try {
+    if (isRegister.value) {
+      if (form.value.password !== form.value.confirmPassword) {
+        errorMessage.value = "Passwords do not match!";
+        loading.value = false;
+        return;
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/api/users/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: form.value.name,
+          email: form.value.email,
+          senha: form.value.password,
+          idade: Number(form.value.age) || 0
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        // Render or backend message can vary check for message or details
+        throw new Error(data.message || data.error || 'Registration failed');
+      }
+      
+      alert('Account created successfully! Please log in.');
+      toggleMode();
+      
+    } else {
+      const response = await fetch(`${API_BASE_URL}/api/users/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: form.value.email, 
+          senha: form.value.password 
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid credentials');
+      }
+      
+      localStorage.setItem('token', data.token);
+      router.push('/chat');
     }
-    console.log("Registering:", form.value)
-  } else {
-    console.log("Logging in:", form.value)
+  } catch (err) {
+    errorMessage.value = err.message || 'An error occurred';
+    console.error("Auth Error:", err);
+  } finally {
+    loading.value = false;
   }
-  
-  router.push('/chat')
 }
 </script>
 
@@ -58,6 +111,9 @@ const handleAuth = () => {
       </p>
       
       <form @submit.prevent="handleAuth" class="auth-form">
+        <div v-if="errorMessage" style="color: #ff6b6b; text-align: left; padding: 0.5rem; background: rgba(255, 107, 107, 0.1); border-radius: 8px; font-size: 0.9rem;">
+          {{ errorMessage }}
+        </div>
         <!-- Name Field (Register Only) -->
         <div v-if="isRegister" class="input-group">
           <div class="icon-wrapper">
@@ -68,6 +124,21 @@ const handleAuth = () => {
             type="text" 
             placeholder="Your Name" 
             required 
+            class="glass-input"
+          />
+        </div>
+
+        <!-- Age Field (Register Only) -->
+        <div v-if="isRegister" class="input-group">
+          <div class="icon-wrapper">
+            <User :size="20" />
+          </div>
+          <input 
+            v-model="form.age"
+            type="number" 
+            placeholder="Your Age" 
+            required 
+            min="1"
             class="glass-input"
           />
         </div>
@@ -114,9 +185,9 @@ const handleAuth = () => {
           />
         </div>
 
-        <button type="submit" class="enter-btn">
-          <span>{{ isRegister ? 'Create Account' : 'Enter Cosmic Chat' }}</span>
-          <ArrowRight :size="20" />
+        <button type="submit" class="enter-btn" :disabled="loading" :style="{ opacity: loading ? 0.7 : 1, cursor: loading ? 'not-allowed' : 'pointer' }">
+          <span>{{ loading ? 'Processing...' : (isRegister ? 'Create Account' : 'Enter Cosmic Chat') }}</span>
+          <ArrowRight v-if="!loading" :size="20" />
         </button>
       </form>
 

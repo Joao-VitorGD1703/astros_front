@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
-import { Send, ArrowLeft, Sparkles, User, RefreshCw } from 'lucide-vue-next'
+import { Send, ArrowLeft, Sparkles, User, RefreshCw, LogOut } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import { getAstrologyResponse } from '../services/gemini'
 import { parse } from 'marked'
@@ -13,6 +13,27 @@ const isTyping = ref(false)
 
 const goBack = () => {
   router.push('/')
+}
+
+const handleLogout = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    if (token) {
+      await fetch('https://astrologic-latest.onrender.com/api/users/logout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+    }
+  } catch (error) {
+    console.error("Logout failed:", error);
+  } finally {
+    localStorage.removeItem('token');
+    localStorage.removeItem('chat_history'); // Ensures history is always deleted
+    messages.value = []; // Clear current messages from view
+    router.push('/');
+  }
 }
 
 const addMessage = (text, isUser = false) => {
@@ -61,8 +82,17 @@ const sendMessage = () => {
 onMounted(() => {
   // Load messages from LocalStorage
   const savedMessages = localStorage.getItem('chat_history')
+  let parsed = []
   if (savedMessages) {
-    messages.value = JSON.parse(savedMessages)
+    try {
+      parsed = JSON.parse(savedMessages)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+  
+  if (parsed && parsed.length > 0) {
+    messages.value = parsed
   } else {
     // Initial Greeting if no history
     setTimeout(() => {
@@ -113,9 +143,14 @@ const clearHistory = () => {
           <span class="status">Online & Ready to Explore Your Stars</span>
         </div>
       </div>
-      <button @click="clearHistory" class="clear-btn" title="Limpar Histórico">
-        <RefreshCw :size="20" />
-      </button>
+      <div class="header-actions">
+        <button @click="clearHistory" class="action-btn clear-btn" title="Limpar Histórico">
+          <RefreshCw :size="20" />
+        </button>
+        <button @click="handleLogout" class="action-btn logout-btn" title="Sair">
+          <LogOut :size="20" />
+        </button>
+      </div>
     </header>
 
     <!-- Messages Area -->
@@ -183,18 +218,35 @@ const clearHistory = () => {
   background: rgba(0,0,0,0.05);
 }
 
-.clear-btn {
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.action-btn {
   background: transparent;
   color: var(--text-muted);
   padding: 8px;
   border-radius: 50%;
-  margin-left: auto; /* Pushes button to the far right */
+  cursor: pointer;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .clear-btn:hover {
-  background: rgba(255, 0, 0, 0.1);
+  background: rgba(255, 107, 107, 0.1);
   color: #ff6b6b;
   transform: rotate(180deg);
+}
+
+.logout-btn:hover {
+  background: rgba(138, 109, 200, 0.1);
+  color: var(--primary-color);
 }
 
 .bot-profile {
@@ -234,6 +286,19 @@ const clearHistory = () => {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1200px;
+  
+  /* Hide scrollbar for Firefox */
+  scrollbar-width: none;
+  /* Hide scrollbar for IE and Edge */
+  -ms-overflow-style: none;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.messages-container::-webkit-scrollbar {
+  display: none;
 }
 
 @media (max-width: 768px) {

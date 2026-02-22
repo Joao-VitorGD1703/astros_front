@@ -1,0 +1,132 @@
+DOCUMENTAÇÃO DA API - ASTROLOGIC BACKEND
+=========================================
+
+URL BASE: https://astrologic-latest.onrender.com
+
+---
+1. ROTAS DO ASTROBOT (IA)
+---
+
+➤ POST /api/astro/
+Descrição: Envia uma mensagem para o AstroBot (Gemini) e recebe a resposta mística ou de leitura de mapa astral.
+Autenticação: Não obrigatória no momento.
+
+Corpo da Requisição (JSON):
+{
+  "currentMessage": "Qual a vibe de hoje?",
+  "history": [
+    { "role": "user", "parts": [{ "text": "Olá" }] },
+    { "role": "model", "parts": [{ "text": "Sou o AstroBot..." }] }
+  ] // A propriedade history é opcional, envie se quiser manter o contexto do chat
+}
+
+Exemplo com Fetch API (Frontend):
+```javascript
+const enviarMensagem = async () => {
+  const response = await fetch('http://localhost:3000/api/astro/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      currentMessage: 'Oi, queria saber meu mapa astral.'
+    })
+  });
+  const data = await response.json();
+  console.log(data.response);
+};
+```
+
+---
+2. ROTAS DE USUÁRIO (AUTENTICAÇÃO E CADASTRO)
+---
+
+➤ POST /api/users/register
+Descrição: Cria um novo usuário no sistema (salvo no Supabase).
+Corpo da Requisição (JSON):
+{
+  "nome": "João da Silva",
+  "email": "joao@email.com",
+  "senha": "senha_segura_123",
+  "idade": 25
+}
+// Retorna os dados do usuário recém-criado.
+
+Exemplo de uso:
+```javascript
+const registrar = async () => {
+  const response = await fetch('http://localhost:3000/api/users/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+       nome: 'Maria Silva',
+       email: 'maria@astro.com',
+       senha: '123',
+       idade: 30
+    })
+  });
+  const data = await response.json();
+};
+```
+
+➤ POST /api/users/login
+Descrição: Realiza o login do usuário retornando um Token JWT para uso nas rotas protegidas.
+Corpo da Requisição (JSON):
+{
+  "email": "joao@email.com",
+  "senha": "senha_segura_123"
+}
+// Retorna: { "message": "Login successful", "token": "eyJhb...", "user": {...} }
+
+Exemplo de uso:
+```javascript
+const fazerLogin = async () => {
+  const response = await fetch('http://localhost:3000/api/users/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'maria@astro.com', senha: '123' })
+  });
+  const data = await response.json();
+  // Salvar data.token no localStorage ou cookie para usar depois
+  localStorage.setItem('token', data.token);
+};
+```
+
+➤ POST /api/users/logout
+Descrição: Faz o logout. Como usamos JWT, o backend apenas retorna sucesso, o frontend deve excluir o token salvo no localStorage/cookie.
+Nenhum corpo de requisição necessário.
+
+➤ GET /api/users/
+Descrição: Retorna a lista de todos os usuários cadastrados.
+
+➤ GET /api/users/:id
+Descrição: Busca os dados de um usuário específico pelo ID.
+
+➤ PUT /api/users/:id (ROTA PROTEGIDA 🔒)
+Descrição: Atualiza as informações do usuário.
+Autenticação: Exige cabeçalho "Authorization: Bearer <SEU_TOKEN_JWT>"
+Corpo da Requisição (JSON) com os dados a serem atualizados:
+{
+  "nome": "João Pedro Santos",
+  "idade": 26
+}
+
+Exemplo de uso (com Token):
+```javascript
+const atualizarUsuario = async (userId) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`http://localhost:3000/api/users/${userId}`, {
+    method: 'PUT',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}` 
+    },
+    body: JSON.stringify({ nome: 'Nome Atualizado' })
+  });
+};
+```
+
+➤ DELETE /api/users/:id (ROTA PROTEGIDA 🔒)
+Descrição: Exclui um usuário do sistema pelo ID.
+Autenticação: Exige cabeçalho "Authorization: Bearer <SEU_TOKEN_JWT>"
+```javascript
+// Exemplo de cabeçalho idêntico à rota PUT
+```
