@@ -82,7 +82,13 @@ const handleAuth = async () => {
       }
       
       localStorage.setItem('token', data.token);
-      router.push('/chat');
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      if (data.user.pagou_stripe || data.user.stripe_paga) {
+        router.push('/chat');
+      } else {
+        router.push('/payment');
+      }
     }
   } catch (err) {
     errorMessage.value = err.message || 'An error occurred';
@@ -194,11 +200,18 @@ const handleAuth = async () => {
       <div class="toggle-container">
         <p>
           {{ isRegister ? 'Already have an account?' : "Don't have an account?" }}
-          <button type="button" @click="toggleMode" class="toggle-btn">
+          <button type="button" @click="toggleMode" class="toggle-btn" :disabled="loading">
             {{ isRegister ? 'Login' : 'Sign Up' }}
           </button>
         </p>
       </div>
+
+      <transition name="fade">
+        <div v-if="loading && !isRegister" class="connecting-message">
+          <Sparkles class="spin-icon" :size="18" />
+          <span>Conectando à sua conta cósmica...</span>
+        </div>
+      </transition>
     </div>
   </div>
 </template>
@@ -287,6 +300,7 @@ h1 {
   margin-bottom: 0.5rem;
   background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 700;
 }
@@ -377,8 +391,51 @@ h1 {
   padding: 0 4px;
 }
 
-.toggle-btn:hover {
+.toggle-btn:hover:not(:disabled) {
   text-decoration: underline;
+}
+
+.toggle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.connecting-message {
+  margin-top: 1.5rem;
+  color: var(--primary-color);
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  animation: pulse 1.5s infinite;
+}
+
+.spin-icon {
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 
 @media (max-width: 768px) {

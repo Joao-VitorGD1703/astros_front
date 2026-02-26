@@ -80,6 +80,27 @@ const sendMessage = () => {
 }
 
 onMounted(() => {
+  // Check auth and payment status
+  const token = localStorage.getItem('token');
+  const userStr = localStorage.getItem('user');
+  
+  if (!token || !userStr) {
+    router.push('/login');
+    return;
+  }
+  
+  try {
+    const user = JSON.parse(userStr);
+    if (!user.pagou_stripe && !user.stripe_paga) {
+      router.push('/payment');
+      return;
+    }
+  } catch (e) {
+    console.error('Invalid user data', e);
+    router.push('/login');
+    return;
+  }
+
   // Load messages from LocalStorage
   const savedMessages = localStorage.getItem('chat_history')
   let parsed = []
